@@ -34,7 +34,7 @@ To build a single sample category:
 msbuild VCXProj\AES.Samples.Syscall.vcxproj /t:Build /p:Configuration=Release /p:Platform=x64
 ```
 
-The sample build script is `Build-AESSamples.ps1`. It generates `manifests/aes.samples.generated.json` from the
+The sample build script is `Build.ps1`. It generates `manifests/aes.samples.generated.json` from the
 suite build metadata; that generated inventory is ignored by git.
 
 ## License And Use Limits

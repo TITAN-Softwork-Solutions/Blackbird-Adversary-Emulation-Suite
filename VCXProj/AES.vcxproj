@@ -207,7 +207,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Build-AESSamples.ps1" />
+    <None Include="..\Build.ps1" />
     <None Include="..\manifests\blackbird.detections.json" />
     <None Include="..\manifests\README.md" />
   </ItemGroup>

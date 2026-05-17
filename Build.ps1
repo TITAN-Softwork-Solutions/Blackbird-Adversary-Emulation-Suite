@@ -147,11 +147,11 @@ function Remove-GeneratedOutputs {
     foreach ($name in $names) {
         $path = Join-Path $OutDir $name
         if (Test-Path -LiteralPath $path) {
-            Remove-Item -LiteralPath $path -Force
+            Remove-Item -LiteralPath $path -Force -ErrorAction SilentlyContinue
         }
     }
     if (Test-Path -LiteralPath $objDir) {
-        Remove-Item -LiteralPath $objDir -Recurse -Force
+        Remove-Item -LiteralPath $objDir -Recurse -Force -ErrorAction SilentlyContinue
     }
 }
 
