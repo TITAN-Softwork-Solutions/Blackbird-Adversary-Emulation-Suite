@@ -46,6 +46,26 @@
       }
     },
     {
+      "id": "pic_direct_syscall_runtime_stub",
+      "kind": "detection",
+      "source": { "type": "binary", "path": "x64/Release/bb_det_pic_direct_syscall_runtime_stub.exe" },
+      "scanSeconds": 24,
+      "environment": {
+        "BK_SR71_ENABLE_PIC": "1",
+        "BK_NT_HOOK_MEMORY": "1"
+      },
+      "expected": {
+        "required": [
+          "SR71_PIC_STATE",
+          { "anyOf": [ "PIC_DIRECT_SYSCALL_SUSPECT", "DIRECT_SYSCALL_ANTI_ANALYSIS_CLUSTER" ] }
+        ],
+        "optional": [
+          "USERMODE_MEMORY_ACTIVITY",
+          "USERMODE_PROCESS_RECON"
+        ]
+      }
+    },
+    {
       "id": "injection_chain_complete",
       "kind": "detection",
       "source": { "type": "binary", "path": "x64/Release/bb_det_injection_chain_complete.exe" },
