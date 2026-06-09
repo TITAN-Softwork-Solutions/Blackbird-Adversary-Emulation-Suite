@@ -54,6 +54,7 @@ DWORD BkaesReadFileChecksum(const std::wstring& path);
 int RunDirectSyscallHandle();
 int RunDirectSyscallStackTf();
 int RunNtStubIntegrityCheck();
+int RunPicDirectSyscallRuntimeStub();
 int RunInjectionChainComplete();
 int RunPeInjectionWrite();
 int RunSectionMapExecute();

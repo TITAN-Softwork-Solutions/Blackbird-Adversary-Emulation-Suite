@@ -14,6 +14,8 @@ int wmain(int argc, wchar_t** argv)
     return RunDirectSyscallStackTf();
 #elif defined(BKAES_SAMPLE_NT_STUB_INTEGRITY_CHECK)
     return RunNtStubIntegrityCheck();
+#elif defined(BKAES_SAMPLE_PIC_DIRECT_SYSCALL_RUNTIME_STUB)
+    return RunPicDirectSyscallRuntimeStub();
 #elif defined(BKAES_SAMPLE_INJECTION_CHAIN_COMPLETE)
     return RunInjectionChainComplete();
 #elif defined(BKAES_SAMPLE_PE_INJECTION_WRITE)
