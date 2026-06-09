@@ -395,6 +395,7 @@ $sampleBuilds = @(
     @{ Category = "syscall"; Name = "bb_det_direct_syscall_handle"; Define = "BKAES_SAMPLE_DIRECT_SYSCALL_HANDLE" },
     @{ Category = "syscall"; Name = "bb_det_direct_syscall_stack_tf"; Define = "BKAES_SAMPLE_DIRECT_SYSCALL_STACK_TF" },
     @{ Category = "syscall"; Name = "bb_det_nt_stub_integrity_check"; Define = "BKAES_SAMPLE_NT_STUB_INTEGRITY_CHECK" },
+    @{ Category = "syscall"; Name = "bb_det_pic_direct_syscall_runtime_stub"; Define = "BKAES_SAMPLE_PIC_DIRECT_SYSCALL_RUNTIME_STUB" },
     @{ Category = "syscall"; Name = "bb_det_anti_debug_vm_queries"; Define = "BKAES_SAMPLE_ANTI_DEBUG_VM_QUERIES" },
     @{ Category = "syscall"; Name = "bb_fuzz_ntapi_queries"; Define = "BKAES_SAMPLE_FUZZ_NTAPI_QUERIES" },
     @{ Category = "injection"; Name = "bb_det_injection_chain_complete"; Define = "BKAES_SAMPLE_INJECTION_CHAIN_COMPLETE" },
