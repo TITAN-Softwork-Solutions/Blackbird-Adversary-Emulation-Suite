@@ -432,6 +432,8 @@
           { "detection": "USERMODE_PROCESS_RECON", "operation": "NtReadVirtualMemory" },
           { "detection": "USERMODE_THREAD_HANDLE_ACTIVITY", "operation": "NtOpenThread" },
           { "detection": "USERMODE_HOOK_API_CALL", "operation": "NtGetNextThread" },
+          { "detection": "SR71_HOOK_QUERY_PROBE", "operation": "NtQueryVirtualMemory" },
+          { "detection": "SR71_HOOK_READ_PROBE", "operation": "NtReadVirtualMemory" },
           { "detection": "SR71_HOOK_PROTECT_BLOCKED", "operation": "NtProtectVirtualMemory" }
         ],
         "optional": [
