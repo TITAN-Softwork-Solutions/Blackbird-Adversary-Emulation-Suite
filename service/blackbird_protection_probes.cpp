@@ -1,5 +1,9 @@
 #include "..\common\bkaes_sample.h"
 
+static constexpr NTSTATUS BkaesStatusNotImplemented = (NTSTATUS)0xC0000002L;
+static constexpr NTSTATUS BkaesStatusAccessDenied = (NTSTATUS)0xC0000022L;
+static constexpr NTSTATUS BkaesStatusNotFound = (NTSTATUS)0xC0000225L;
+
 static std::wstring ExpandProbePath(const wchar_t* path)
 {
     DWORD needed = ExpandEnvironmentStringsW(path, nullptr, 0);
@@ -133,6 +137,12 @@ struct MemoryStubProbeResult
     int queried;
     int readBack;
     int patchedLooking;
+    int sr71Queried;
+    int sr71ReadBack;
+    bool sr71ProtectDenied;
+    bool sr71WriteDenied;
+    NTSTATUS sr71QueryStatus;
+    NTSTATUS sr71ReadStatus;
     NTSTATUS protectStatus;
     NTSTATUS writeStatus;
     SIZE_T written;
@@ -402,6 +412,10 @@ static MemoryStubProbeResult ProbeProtectedMemoryAndNtStubs()
     };
 
     MemoryStubProbeResult result = {};
+    result.sr71QueryStatus = BkaesStatusNotFound;
+    result.sr71ReadStatus = BkaesStatusNotFound;
+    result.protectStatus = BkaesStatusNotImplemented;
+    result.writeStatus = BkaesStatusNotImplemented;
     void* firstExport = nullptr;
     BYTE firstByte = 0;
     for (const char* name : exports)
@@ -450,6 +464,28 @@ static MemoryStubProbeResult ProbeProtectedMemoryAndNtStubs()
 
     HMODULE sr71 = GetModuleHandleW(L"SR71.dll");
     void* protectedProbe = sr71 != nullptr ? reinterpret_cast<void*>(sr71) : firstExport;
+    if (sr71 != nullptr && ntQueryVirtualMemory != nullptr)
+    {
+        MEMORY_BASIC_INFORMATION mbi = {};
+        SIZE_T ret = 0;
+        result.sr71QueryStatus =
+            ntQueryVirtualMemory(GetCurrentProcess(), sr71, 0, &mbi, sizeof(mbi), &ret);
+        if (result.sr71QueryStatus >= 0)
+        {
+            ++result.sr71Queried;
+        }
+    }
+    if (sr71 != nullptr && ntReadVirtualMemory != nullptr)
+    {
+        BYTE sr71Bytes[32] = {};
+        SIZE_T bytesRead = 0;
+        result.sr71ReadStatus =
+            ntReadVirtualMemory(GetCurrentProcess(), sr71, sr71Bytes, sizeof(sr71Bytes), &bytesRead);
+        if (result.sr71ReadStatus >= 0 && bytesRead != 0)
+        {
+            ++result.sr71ReadBack;
+        }
+    }
     if (protectedProbe != nullptr && ntProtectVirtualMemory != nullptr)
     {
         PVOID base = protectedProbe;
@@ -457,6 +493,7 @@ static MemoryStubProbeResult ProbeProtectedMemoryAndNtStubs()
         ULONG oldProtect = 0;
         result.protectStatus =
             ntProtectVirtualMemory(GetCurrentProcess(), &base, &size, PAGE_EXECUTE_READWRITE, &oldProtect);
+        result.sr71ProtectDenied = sr71 != nullptr && result.protectStatus == BkaesStatusAccessDenied;
         if (result.protectStatus >= 0 && oldProtect != 0)
         {
             ULONG ignored = 0;
@@ -467,12 +504,16 @@ static MemoryStubProbeResult ProbeProtectedMemoryAndNtStubs()
     {
         result.writeStatus =
             ntWriteVirtualMemory(GetCurrentProcess(), protectedProbe, &firstByte, sizeof(firstByte), &result.written);
+        result.sr71WriteDenied = sr71 != nullptr && result.writeStatus == BkaesStatusAccessDenied;
     }
 
     BkaesPrint("[OK] protected memory and NT stub probe queried=%d read=%d patchedLooking=%d protectStatus=0x%08lX "
-               "writeStatus=0x%08lX written=%llu\n",
+               "writeStatus=0x%08lX written=%llu sr71=%p sr71Queried=%d sr71Read=%d sr71QueryStatus=0x%08lX "
+               "sr71ReadStatus=0x%08lX sr71ProtectDenied=%u sr71WriteDenied=%u\n",
                result.queried, result.readBack, result.patchedLooking, (ULONG)result.protectStatus,
-               (ULONG)result.writeStatus, (unsigned long long)result.written);
+               (ULONG)result.writeStatus, (unsigned long long)result.written, sr71, result.sr71Queried,
+               result.sr71ReadBack, (ULONG)result.sr71QueryStatus, (ULONG)result.sr71ReadStatus,
+               result.sr71ProtectDenied ? 1u : 0u, result.sr71WriteDenied ? 1u : 0u);
     return result;
 }
 
@@ -499,12 +540,16 @@ int RunBlackbirdProtectionProbes()
         "blackbirdServicesOpened=%d blackbirdFilesVisible=%d blackbirdLocalFilesVisible=%d "
         "blackbirdProcesses=%d blackbirdProcessesOpened=%d blackbirdModules=%d sr71Loaded=%u j58Loaded=%u "
         "vmServicesOpened=%d vmFilesVisible=%d sr71ThreadsOpened=%d sr71ThreadStartsQueried=%d ntGetNext=%d "
-        "ntStubsQueried=%d ntStubsRead=%d patchedLooking=%d protectStatus=0x%08lX writeStatus=0x%08lX written=%llu\n",
+        "ntStubsQueried=%d ntStubsRead=%d patchedLooking=%d sr71Queried=%d sr71Read=%d "
+        "sr71ProtectDenied=%u sr71WriteDenied=%u sr71QueryStatus=0x%08lX sr71ReadStatus=0x%08lX "
+        "protectStatus=0x%08lX writeStatus=0x%08lX written=%llu\n",
         concealmentFailed ? "failed" : "passed", assertConcealment ? 1u : 0u, blackbirdVisible, vmVisible,
         services.blackbirdOpened, files.blackbirdVisible, files.blackbirdLocalVisible, processModules.matchedProcesses,
         processModules.openedProcesses, processModules.matchedModules, processModules.sr71Loaded ? 1u : 0u,
         processModules.j58Loaded ? 1u : 0u, services.vmOpened, files.vmVisible, threads.openedThreads,
         threads.queriedThreadStarts, threads.ntGetNextCount, memory.queried, memory.readBack, memory.patchedLooking,
+        memory.sr71Queried, memory.sr71ReadBack, memory.sr71ProtectDenied ? 1u : 0u,
+        memory.sr71WriteDenied ? 1u : 0u, (ULONG)memory.sr71QueryStatus, (ULONG)memory.sr71ReadStatus,
         (ULONG)memory.protectStatus, (ULONG)memory.writeStatus, (unsigned long long)memory.written);
     if (FAILED(outcomeStatus))
     {
