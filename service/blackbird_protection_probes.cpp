@@ -141,6 +141,9 @@ struct MemoryStubProbeResult
     int sr71ReadBack;
     bool sr71ProtectDenied;
     bool sr71WriteDenied;
+    bool sr71DescriptorTampered;
+    bool sr71DescriptorRestored;
+    void* sr71DescriptorAddress;
     NTSTATUS sr71QueryStatus;
     NTSTATUS sr71ReadStatus;
     NTSTATUS protectStatus;
@@ -398,6 +401,171 @@ static bool StubBytesLookPatched(const BYTE* bytes, size_t size)
            (bytes[0] == 0xFF && bytes[1] == 0x25) || (bytes[0] == 0x48 && bytes[1] == 0xB8);
 }
 
+static bool TryGetImageLayout(HMODULE module, IMAGE_NT_HEADERS** ntHeaders)
+{
+    if (module == nullptr || ntHeaders == nullptr)
+    {
+        return false;
+    }
+
+    auto* base = reinterpret_cast<BYTE*>(module);
+    auto* dos = reinterpret_cast<IMAGE_DOS_HEADER*>(base);
+    if (dos->e_magic != IMAGE_DOS_SIGNATURE || dos->e_lfanew <= 0)
+    {
+        return false;
+    }
+
+    auto* nt = reinterpret_cast<IMAGE_NT_HEADERS*>(base + dos->e_lfanew);
+    if (nt->Signature != IMAGE_NT_SIGNATURE || nt->OptionalHeader.SizeOfImage == 0)
+    {
+        return false;
+    }
+
+    *ntHeaders = nt;
+    return true;
+}
+
+static void* FindSr71AsciiString(HMODULE sr71, const char* value)
+{
+    IMAGE_NT_HEADERS* nt = nullptr;
+    if (!TryGetImageLayout(sr71, &nt) || value == nullptr)
+    {
+        return nullptr;
+    }
+
+    auto* base = reinterpret_cast<BYTE*>(sr71);
+    const size_t needleLength = strlen(value) + 1;
+    auto* section = IMAGE_FIRST_SECTION(nt);
+    for (WORD i = 0; i < nt->FileHeader.NumberOfSections; ++i, ++section)
+    {
+        if ((section->Characteristics & IMAGE_SCN_MEM_READ) == 0 || section->Misc.VirtualSize < needleLength)
+        {
+            continue;
+        }
+
+        BYTE* start = base + section->VirtualAddress;
+        BYTE* end = start + section->Misc.VirtualSize - needleLength;
+        __try
+        {
+            for (BYTE* p = start; p <= end; ++p)
+            {
+                if (memcmp(p, value, needleLength) == 0)
+                {
+                    return p;
+                }
+            }
+        }
+        __except (EXCEPTION_EXECUTE_HANDLER)
+        {
+        }
+    }
+    return nullptr;
+}
+
+static void* FindSr71WritablePointer(HMODULE sr71, void* value)
+{
+    IMAGE_NT_HEADERS* nt = nullptr;
+    if (!TryGetImageLayout(sr71, &nt) || value == nullptr)
+    {
+        return nullptr;
+    }
+
+    auto* base = reinterpret_cast<BYTE*>(sr71);
+    const uintptr_t needle = reinterpret_cast<uintptr_t>(value);
+    auto* section = IMAGE_FIRST_SECTION(nt);
+    for (WORD i = 0; i < nt->FileHeader.NumberOfSections; ++i, ++section)
+    {
+        if ((section->Characteristics & IMAGE_SCN_MEM_WRITE) == 0 ||
+            section->Misc.VirtualSize < sizeof(uintptr_t))
+        {
+            continue;
+        }
+
+        BYTE* start = base + section->VirtualAddress;
+        BYTE* end = start + section->Misc.VirtualSize - sizeof(uintptr_t);
+        __try
+        {
+            for (BYTE* p = start; p <= end; p += sizeof(void*))
+            {
+                uintptr_t candidate = 0;
+                memcpy(&candidate, p, sizeof(candidate));
+                if (candidate == needle)
+                {
+                    return p;
+                }
+            }
+        }
+        __except (EXCEPTION_EXECUTE_HANDLER)
+        {
+        }
+    }
+    return nullptr;
+}
+
+static bool ProbeSr71DescriptorTamper(HMODULE sr71, void** descriptorAddress, bool* restored)
+{
+    if (descriptorAddress != nullptr)
+    {
+        *descriptorAddress = nullptr;
+    }
+    if (restored != nullptr)
+    {
+        *restored = false;
+    }
+    if (sr71 == nullptr)
+    {
+        return false;
+    }
+
+    void* ntCreateThreadName = FindSr71AsciiString(sr71, "NtCreateThread");
+    void* descriptor = FindSr71WritablePointer(sr71, ntCreateThreadName);
+    if (descriptor == nullptr)
+    {
+        return false;
+    }
+
+    // NtTargetHook layout: Name ptr, Operation, padding, target token, stub token, SyscallIndex.
+    auto* syscallIndex = reinterpret_cast<DWORD*>(static_cast<BYTE*>(descriptor) + 32);
+    DWORD original = 0;
+    bool tampered = false;
+    __try
+    {
+        original = *syscallIndex;
+        *syscallIndex = original ^ 0x00010000u;
+        tampered = (*syscallIndex != original);
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER)
+    {
+        tampered = false;
+    }
+
+    if (descriptorAddress != nullptr)
+    {
+        *descriptorAddress = descriptor;
+    }
+
+    if (!tampered)
+    {
+        return false;
+    }
+
+    BkaesSettleTelemetry(3500);
+
+    __try
+    {
+        *syscallIndex = original;
+        if (restored != nullptr)
+        {
+            *restored = (*syscallIndex == original);
+        }
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER)
+    {
+    }
+
+    return true;
+}
+
 static MemoryStubProbeResult ProbeProtectedMemoryAndNtStubs()
 {
     HMODULE ntdll = GetModuleHandleW(L"ntdll.dll");
@@ -506,14 +674,19 @@ static MemoryStubProbeResult ProbeProtectedMemoryAndNtStubs()
             ntWriteVirtualMemory(GetCurrentProcess(), protectedProbe, &firstByte, sizeof(firstByte), &result.written);
         result.sr71WriteDenied = sr71 != nullptr && result.writeStatus == BkaesStatusAccessDenied;
     }
+    result.sr71DescriptorTampered =
+        ProbeSr71DescriptorTamper(sr71, &result.sr71DescriptorAddress, &result.sr71DescriptorRestored);
 
     BkaesPrint("[OK] protected memory and NT stub probe queried=%d read=%d patchedLooking=%d protectStatus=0x%08lX "
                "writeStatus=0x%08lX written=%llu sr71=%p sr71Queried=%d sr71Read=%d sr71QueryStatus=0x%08lX "
-               "sr71ReadStatus=0x%08lX sr71ProtectDenied=%u sr71WriteDenied=%u\n",
+               "sr71ReadStatus=0x%08lX sr71ProtectDenied=%u sr71WriteDenied=%u sr71DescriptorTampered=%u "
+               "sr71DescriptorRestored=%u sr71Descriptor=%p\n",
                result.queried, result.readBack, result.patchedLooking, (ULONG)result.protectStatus,
                (ULONG)result.writeStatus, (unsigned long long)result.written, sr71, result.sr71Queried,
                result.sr71ReadBack, (ULONG)result.sr71QueryStatus, (ULONG)result.sr71ReadStatus,
-               result.sr71ProtectDenied ? 1u : 0u, result.sr71WriteDenied ? 1u : 0u);
+               result.sr71ProtectDenied ? 1u : 0u, result.sr71WriteDenied ? 1u : 0u,
+               result.sr71DescriptorTampered ? 1u : 0u, result.sr71DescriptorRestored ? 1u : 0u,
+               result.sr71DescriptorAddress);
     return result;
 }
 
@@ -541,15 +714,18 @@ int RunBlackbirdProtectionProbes()
         "blackbirdProcesses=%d blackbirdProcessesOpened=%d blackbirdModules=%d sr71Loaded=%u j58Loaded=%u "
         "vmServicesOpened=%d vmFilesVisible=%d sr71ThreadsOpened=%d sr71ThreadStartsQueried=%d ntGetNext=%d "
         "ntStubsQueried=%d ntStubsRead=%d patchedLooking=%d sr71Queried=%d sr71Read=%d "
-        "sr71ProtectDenied=%u sr71WriteDenied=%u sr71QueryStatus=0x%08lX sr71ReadStatus=0x%08lX "
-        "protectStatus=0x%08lX writeStatus=0x%08lX written=%llu\n",
+        "sr71ProtectDenied=%u sr71WriteDenied=%u sr71DescriptorTampered=%u sr71DescriptorRestored=%u "
+        "sr71Descriptor=0x%p sr71QueryStatus=0x%08lX sr71ReadStatus=0x%08lX protectStatus=0x%08lX "
+        "writeStatus=0x%08lX written=%llu\n",
         concealmentFailed ? "failed" : "passed", assertConcealment ? 1u : 0u, blackbirdVisible, vmVisible,
         services.blackbirdOpened, files.blackbirdVisible, files.blackbirdLocalVisible, processModules.matchedProcesses,
         processModules.openedProcesses, processModules.matchedModules, processModules.sr71Loaded ? 1u : 0u,
         processModules.j58Loaded ? 1u : 0u, services.vmOpened, files.vmVisible, threads.openedThreads,
         threads.queriedThreadStarts, threads.ntGetNextCount, memory.queried, memory.readBack, memory.patchedLooking,
         memory.sr71Queried, memory.sr71ReadBack, memory.sr71ProtectDenied ? 1u : 0u,
-        memory.sr71WriteDenied ? 1u : 0u, (ULONG)memory.sr71QueryStatus, (ULONG)memory.sr71ReadStatus,
+        memory.sr71WriteDenied ? 1u : 0u, memory.sr71DescriptorTampered ? 1u : 0u,
+        memory.sr71DescriptorRestored ? 1u : 0u, memory.sr71DescriptorAddress,
+        (ULONG)memory.sr71QueryStatus, (ULONG)memory.sr71ReadStatus,
         (ULONG)memory.protectStatus, (ULONG)memory.writeStatus, (unsigned long long)memory.written);
     if (FAILED(outcomeStatus))
     {
