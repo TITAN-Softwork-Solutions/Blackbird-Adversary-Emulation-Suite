@@ -30,10 +30,43 @@ std::wstring BkaesGetEnvString(const wchar_t* name)
     return std::wstring(buffer.data(), len);
 }
 
+static std::wstring BkaesFallbackAuditDirectory()
+{
+    wchar_t windowsDirectory[MAX_PATH] = {};
+    UINT len = GetWindowsDirectoryW(windowsDirectory, ARRAYSIZE(windowsDirectory));
+
+    std::wstring directory =
+        (len != 0 && len < ARRAYSIZE(windowsDirectory)) ? std::wstring(windowsDirectory, len)
+                                                        : std::wstring(L"C:\\Windows");
+    if (!directory.empty() && directory.back() != L'\\' && directory.back() != L'/')
+    {
+        directory += L"\\";
+    }
+    directory += L"Temp";
+    CreateDirectoryW(directory.c_str(), nullptr);
+
+    directory += L"\\BKAESProbeTelemetry";
+    CreateDirectoryW(directory.c_str(), nullptr);
+
+    directory += L"\\";
+    directory += std::to_wstring(GetCurrentProcessId());
+    CreateDirectoryW(directory.c_str(), nullptr);
+    return directory;
+}
+
 void BkaesWriteAuditText(const wchar_t* fileName, const char* text)
 {
+    if (fileName == nullptr || fileName[0] == L'\0' || text == nullptr)
+    {
+        return;
+    }
+
     std::wstring directory = BkaesGetEnvString(L"BKAES_AUDIT_JOB_DIR");
-    if (directory.empty() || fileName == nullptr || fileName[0] == L'\0' || text == nullptr)
+    if (directory.empty())
+    {
+        directory = BkaesFallbackAuditDirectory();
+    }
+    if (directory.empty())
     {
         return;
     }

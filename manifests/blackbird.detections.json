@@ -419,10 +419,14 @@
       "launch": {
         "scanSeconds": 18,
         "enableKernelHooks": true,
+        "enableKernelInlineNtApiHooks": true,
         "enableAntiVirtualizationMasking": true,
         "enableControllerConcealment": true,
         "concealHookPresence": true,
-        "environment": { "BKAES_ASSERT_CONCEALMENT": "1" },
+        "environment": {
+          "BKAES_ASSERT_CONCEALMENT": "1",
+          "BK_SR71_TEST_DESCRIPTOR_TAMPER": "1"
+        },
         "enableControllerProtectedAccess": true
       },
       "expected": {
