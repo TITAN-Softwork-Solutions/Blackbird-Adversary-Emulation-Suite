@@ -15,7 +15,7 @@ dual-use/offensive purpose.
 - `common/` - shared sample dispatcher and support code.
 - `apc/`, `beacon/`, `hollowing/`, `injection/`, `kerberos/`, `lotl/`, `lpe/`, `mem/`, `network/`, `process/`,
   `registry/`, `service/`, `sxs/`, `syscall/`, `benign/` - sample categories built by the category vcxprojs.
-- `manifests/` - Blackbird detection audit metadata.
+- `manifests/` - Blackbird detection and protection audit metadata.
 
 ## Build
 

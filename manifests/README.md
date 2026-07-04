@@ -1,6 +1,8 @@
 # Blackbird Detection Audit Manifests
 
 `blackbird.detections.json` is the authoritative audit manifest for `BlackbirdRunner --detection-audit`.
+`blackbird.protection.json` contains platform protection benchmarks, including the anti-VM identity probe
+cases that execute through `BlackbirdRunner.exe`.
 
 Run a focused case:
 
@@ -21,5 +23,9 @@ $env:PATH = (Resolve-Path ".\Enterprise\x64\Debug").Path + ";" + $env:PATH
 Case binaries are resolved from the manifest path first. The AES build script places sample binaries in `x64\Release` by default.
 `Build-AESSamples.ps1` also writes `aes.samples.generated.json` here as a generated sample inventory; detection
 expectations remain in `blackbird.detections.json`.
+
+Protection benchmarks are resolved the same way as detection cases, but may point at Blackbird platform
+tools instead of AES sample binaries when the test validates analysis-environment concealment rather than
+sample behavior.
 
 The runner writes `blackbird-detection-audit.json`, `blackbird-detection-audit.md`, `junit.xml`, and one per-case folder containing the capture archive plus `result.json` and `facts.json`.

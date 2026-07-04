@@ -1,0 +1,75 @@
+{
+  "schema": 2,
+  "suite": "Blackbird Protection Audit",
+  "cases": [
+    {
+      "id": "anti_vm_identity_probe_enterprise",
+      "kind": "protection concealment",
+      "source": {
+        "type": "binary",
+        "path": "BlackbirdRunner.exe"
+      },
+      "launch": {
+        "args": [
+          "--anti-vm-probe",
+          "--mode",
+          "enterprise",
+          "--assert-concealed"
+        ],
+        "scanSeconds": 20,
+        "enableKernelHooks": true,
+        "enableAntiVirtualizationMasking": true,
+        "enableQpcTimingCompensation": true,
+        "enableControllerConcealment": true,
+        "useKernelDriver": true,
+        "useUsermodeHooks": true,
+        "environment": {
+          "BKAES_ASSERT_CONCEALMENT": "1"
+        }
+      },
+      "expected": {
+        "allowedExtra": [
+          "ANTI_VM_FIRMWARE_TABLE_QUERY",
+          "ANTI_DEBUG_KERNEL_DEBUGGER_QUERY",
+          "SANDBOX_EVASION_QUERY",
+          "USERMODE_WMI_ACTIVITY",
+          "USERMODE_PROCESS_RECON"
+        ]
+      }
+    },
+    {
+      "id": "anti_vm_identity_probe_community",
+      "kind": "protection concealment",
+      "source": {
+        "type": "binary",
+        "path": "BlackbirdRunner.exe"
+      },
+      "launch": {
+        "args": [
+          "--anti-vm-probe",
+          "--mode",
+          "community",
+          "--assert-concealed"
+        ],
+        "scanSeconds": 20,
+        "enableKernelHooks": true,
+        "enableAntiVirtualizationMasking": true,
+        "enableQpcTimingCompensation": true,
+        "useKernelDriver": true,
+        "useUsermodeHooks": true,
+        "environment": {
+          "BKAES_ASSERT_CONCEALMENT": "1"
+        }
+      },
+      "expected": {
+        "allowedExtra": [
+          "ANTI_VM_FIRMWARE_TABLE_QUERY",
+          "ANTI_DEBUG_KERNEL_DEBUGGER_QUERY",
+          "SANDBOX_EVASION_QUERY",
+          "USERMODE_WMI_ACTIVITY",
+          "USERMODE_PROCESS_RECON"
+        ]
+      }
+    }
+  ]
+}
