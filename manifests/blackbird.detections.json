@@ -5,10 +5,19 @@
     {
       "id": "direct_syscall_handle",
       "kind": "detection",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_direct_syscall_handle.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_direct_syscall_handle.exe"
+      },
       "expected": {
         "required": [
-          { "anyOf": [ "DIRECT_SYSCALL", "DIRECT_SYSCALL_SUSPECT_HANDLE_OPERATION" ], "operation": "NtOpenProcess" },
+          {
+            "anyOf": [
+              "DIRECT_SYSCALL",
+              "DIRECT_SYSCALL_SUSPECT_HANDLE_OPERATION"
+            ],
+            "operation": "NtOpenProcess"
+          },
           "YARA_DIRECT_SYSCALL_STUB"
         ],
         "optional": [
@@ -19,10 +28,19 @@
     {
       "id": "direct_syscall_stack_tf",
       "kind": "detection",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_direct_syscall_stack_tf.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_direct_syscall_stack_tf.exe"
+      },
       "expected": {
         "required": [
-          { "anyOf": [ "DIRECT_SYSCALL", "DIRECT_SYSCALL_SUSPECT_HANDLE_OPERATION" ], "operation": "NtOpenProcess" },
+          {
+            "anyOf": [
+              "DIRECT_SYSCALL",
+              "DIRECT_SYSCALL_SUSPECT_HANDLE_OPERATION"
+            ],
+            "operation": "NtOpenProcess"
+          },
           "YARA_DIRECT_SYSCALL_STUB"
         ],
         "optional": [
@@ -31,9 +49,44 @@
       }
     },
     {
+      "id": "direct_syscall_injection_chain",
+      "kind": "detection",
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_direct_syscall_injection_chain.exe"
+      },
+      "launch": {
+        "scanSeconds": 22,
+        "enableKernelHooks": true
+      },
+      "expected": {
+        "required": [
+          {
+            "anyOf": [
+              "DIRECT_SYSCALL_REMOTE_EXECUTION_CHAIN",
+              "DIRECT_SYSCALL_SHELLCODE_STAGING",
+              "DIRECT_SYSCALL"
+            ]
+          },
+          "YARA_DIRECT_SYSCALL_STUB",
+          "REMOTE_THREAD_START_IN_NON_IMAGE_EXECUTABLE_REGION"
+        ],
+        "optional": [
+          "INJECTION_CHAIN_PARTIAL",
+          "INJECTION_CHAIN_COMPLETE",
+          "REMOTE_THREAD_WITH_RECENT_HANDLE_INTENT",
+          "SUSPICIOUS_RWX_ALLOCATION",
+          "POSSIBLE_MANUAL_MAP_OR_HOLLOWING_EXECUTION"
+        ]
+      }
+    },
+    {
       "id": "nt_stub_integrity_check",
       "kind": "detection",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_nt_stub_integrity_check.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_nt_stub_integrity_check.exe"
+      },
       "expected": {
         "required": [
           "YARA_DIRECT_SYSCALL_STUB"
@@ -48,7 +101,10 @@
     {
       "id": "injection_chain_complete",
       "kind": "detection",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_injection_chain_complete.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_injection_chain_complete.exe"
+      },
       "expected": {
         "required": [
           "SUSPICIOUS_RWX_ALLOCATION",
@@ -63,25 +119,96 @@
       }
     },
     {
+      "id": "wow64_injection_chain",
+      "kind": "detection",
+      "source": {
+        "type": "binary",
+        "path": "x86/Release/bb_det_wow64_injection_chain.exe"
+      },
+      "launch": {
+        "scanSeconds": 22,
+        "enableKernelHooks": true
+      },
+      "expected": {
+        "required": [
+          "SUSPICIOUS_RWX_ALLOCATION",
+          "INJECTION_CHAIN_PARTIAL",
+          "REMOTE_THREAD_START_IN_NON_IMAGE_EXECUTABLE_REGION"
+        ],
+        "optional": [
+          "INJECTION_CHAIN_COMPLETE",
+          "REMOTE_THREAD_WITH_RECENT_HANDLE_INTENT",
+          "POSSIBLE_MANUAL_MAP_OR_HOLLOWING_EXECUTION",
+          "SHELLCODE_STAGE_PATTERN"
+        ]
+      }
+    },
+    {
+      "id": "evasion_injection_chain",
+      "kind": "detection",
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_evasion_injection_chain.exe"
+      },
+      "launch": {
+        "scanSeconds": 22,
+        "enableKernelHooks": true
+      },
+      "expected": {
+        "required": [
+          {
+            "anyOf": [
+              "ANTI_DEBUG_QUERY",
+              "SANDBOX_EVASION_QUERY",
+              "ANTI_DEBUG_PROCESS_QUERY",
+              "ANTI_DEBUG_KERNEL_DEBUGGER_QUERY"
+            ]
+          },
+          "INJECTION_CHAIN_PARTIAL",
+          "REMOTE_THREAD_START_IN_NON_IMAGE_EXECUTABLE_REGION"
+        ],
+        "optional": [
+          "INJECTION_CHAIN_COMPLETE",
+          "SUSPICIOUS_RWX_ALLOCATION",
+          "REMOTE_THREAD_WITH_RECENT_HANDLE_INTENT",
+          "POSSIBLE_MANUAL_MAP_OR_HOLLOWING_EXECUTION"
+        ]
+      }
+    },
+    {
       "id": "pe_injection_write",
       "kind": "detection",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_pe_injection_write.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_pe_injection_write.exe"
+      },
       "expected": {
-        "required": [ "PE_INJECTION_WRITE", "CROSS_PROCESS_WRITE_PATTERN" ]
+        "required": [
+          "PE_INJECTION_WRITE",
+          "CROSS_PROCESS_WRITE_PATTERN"
+        ]
       }
     },
     {
       "id": "section_map_execute",
       "kind": "detection",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_section_map_execute.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_section_map_execute.exe"
+      },
       "expected": {
-        "required": [ "SECTION_BASED_INJECTION" ]
+        "required": [
+          "SECTION_BASED_INJECTION"
+        ]
       }
     },
     {
       "id": "hollowing_mark_chain",
       "kind": "detection",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_hollowing_mark_chain.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_hollowing_mark_chain.exe"
+      },
       "launch": {
         "scanSeconds": 18,
         "enableKernelHooks": true
@@ -90,14 +217,16 @@
         "required": [
           "PE_INJECTION_WRITE",
           "THREAD_CONTEXT_HIJACK",
-          { "anyOf": [
-            "PROCESS_HOLLOWING_MARK_CHAIN_MEDIUM",
-            "PROCESS_HOLLOWING_MARK_CHAIN_STRONG",
-            "PROCESS_HOLLOWING_UNMAP_REPLACE_CHAIN",
-            "POSSIBLE_MANUAL_MAP_OR_HOLLOWING_EXECUTION",
-            "THREAD_HIJACK_MANUAL_MAP_CONFIRMED",
-            "PROCESS_HOLLOWING_IMAGE_PRIVATE_COPY_EXEC"
-          ] }
+          {
+            "anyOf": [
+              "PROCESS_HOLLOWING_MARK_CHAIN_MEDIUM",
+              "PROCESS_HOLLOWING_MARK_CHAIN_STRONG",
+              "PROCESS_HOLLOWING_UNMAP_REPLACE_CHAIN",
+              "POSSIBLE_MANUAL_MAP_OR_HOLLOWING_EXECUTION",
+              "THREAD_HIJACK_MANUAL_MAP_CONFIRMED",
+              "PROCESS_HOLLOWING_IMAGE_PRIVATE_COPY_EXEC"
+            ]
+          }
         ],
         "optional": [
           "USERMODE_THREAD_CONTEXT_ACTIVITY",
@@ -108,9 +237,45 @@
       }
     },
     {
+      "id": "transacted_hollowing_marker",
+      "kind": "detection",
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_transacted_hollowing_marker.exe"
+      },
+      "launch": {
+        "scanSeconds": 24,
+        "enableKernelHooks": true
+      },
+      "expected": {
+        "required": [
+          "PE_INJECTION_WRITE",
+          "THREAD_CONTEXT_HIJACK",
+          {
+            "anyOf": [
+              "PROCESS_HOLLOWING_TXF_SUSPECT_CHAIN",
+              "PROCESS_HOLLOWING_UNMAP_REPLACE_CHAIN",
+              "PROCESS_HOLLOWING_MARK_CHAIN_STRONG",
+              "POSSIBLE_MANUAL_MAP_OR_HOLLOWING_EXECUTION",
+              "PROCESS_HOLLOWING_IMAGE_PRIVATE_COPY_EXEC"
+            ]
+          }
+        ],
+        "optional": [
+          "PROCESS_HOLLOWING_TXF_SUSPECT_CHAIN",
+          "PROCESS_IMAGE_GHOSTING_SUSPECT",
+          "PROCESS_IMAGE_TAMPER_SUSPECT",
+          "POSSIBLE_MANUAL_MAP_OR_HOLLOWING_EXECUTION"
+        ]
+      }
+    },
+    {
       "id": "remote_apc_queue",
       "kind": "detection",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_remote_apc_queue.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_remote_apc_queue.exe"
+      },
       "launch": {
         "scanSeconds": 18,
         "enableKernelHooks": true
@@ -131,11 +296,16 @@
     {
       "id": "remote_apc_loadlibrary",
       "kind": "detection",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_remote_apc_loadlibrary.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_remote_apc_loadlibrary.exe"
+      },
       "launch": {
         "scanSeconds": 18,
         "enableKernelHooks": true,
-        "sidecars": [ "x64/Release/bb_unsigned_plugin.dll" ]
+        "sidecars": [
+          "x64/Release/bb_unsigned_plugin.dll"
+        ]
       },
       "expected": {
         "required": [
@@ -151,9 +321,35 @@
       }
     },
     {
+      "id": "early_bird_apc",
+      "kind": "detection",
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_early_bird_apc.exe"
+      },
+      "launch": {
+        "scanSeconds": 22,
+        "enableKernelHooks": true
+      },
+      "expected": {
+        "required": [
+          "REMOTE_APC_QUEUE_NTAPI",
+          "USERMODE_APC_QUEUE_ACTIVITY"
+        ],
+        "optional": [
+          "REMOTE_APC_CREATION",
+          "REMOTE_APC_CREATION_SUSPECT",
+          "SUSPICIOUS_APC_ROUTINE"
+        ]
+      }
+    },
+    {
       "id": "context_hijack_tf",
       "kind": "detection",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_context_hijack_tf.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_context_hijack_tf.exe"
+      },
       "launch": {
         "scanSeconds": 18,
         "enableKernelHooks": true
@@ -173,11 +369,16 @@
     {
       "id": "loadlibrary_remote_thread",
       "kind": "detection",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_loadlibrary_remote_thread.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_loadlibrary_remote_thread.exe"
+      },
       "launch": {
         "scanSeconds": 18,
         "enableKernelHooks": true,
-        "sidecars": [ "x64/Release/bb_unsigned_plugin.dll" ]
+        "sidecars": [
+          "x64/Release/bb_unsigned_plugin.dll"
+        ]
       },
       "expected": {
         "required": [
@@ -192,11 +393,41 @@
       }
     },
     {
+      "id": "loadlibrary_module_notify",
+      "kind": "detection",
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_loadlibrary_module_notify.exe"
+      },
+      "launch": {
+        "scanSeconds": 18,
+        "enableKernelHooks": true,
+        "sidecars": [
+          "x64/Release/bb_unsigned_plugin.dll"
+        ]
+      },
+      "expected": {
+        "required": [
+          "USERMODE_MODULE_LOAD"
+        ],
+        "optional": [
+          "KERNEL_IMAGE_LOAD",
+          "IMAGE_LOAD_UNSIGNED_NON_SYSTEM",
+          "IMAGE_LOAD_FROM_USER_WRITABLE_PATH"
+        ]
+      }
+    },
+    {
       "id": "setwindows_hookex",
       "kind": "detection",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_setwindows_hookex.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_setwindows_hookex.exe"
+      },
       "launch": {
-        "sidecars": [ "x64/Release/bb_unsigned_plugin.dll" ]
+        "sidecars": [
+          "x64/Release/bb_unsigned_plugin.dll"
+        ]
       },
       "expected": {
         "required": [
@@ -211,15 +442,23 @@
     {
       "id": "ppid_spoof",
       "kind": "detection",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_ppid_spoof.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_ppid_spoof.exe"
+      },
       "expected": {
-        "required": [ "PARENT_PID_SPOOF_SUSPECT" ]
+        "required": [
+          "PARENT_PID_SPOOF_SUSPECT"
+        ]
       }
     },
     {
       "id": "powershell_cmdlines",
       "kind": "detection",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_powershell_cmdlines.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_powershell_cmdlines.exe"
+      },
       "expected": {
         "required": [
           "POWERSHELL_SUSPICIOUS_INVOCATION",
@@ -233,7 +472,10 @@
     {
       "id": "lolbin_cmdlines",
       "kind": "detection",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_lolbin_cmdlines.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_lolbin_cmdlines.exe"
+      },
       "expected": {
         "required": [
           "LOLBIN_EXECUTION",
@@ -246,15 +488,43 @@
     {
       "id": "registry_persistence_hkcu",
       "kind": "detection",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_registry_persistence_hkcu.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_registry_persistence_hkcu.exe"
+      },
       "expected": {
         "required": [
           "REGISTRY_AUTORUN_WRITE",
-          { "detection": "REGISTRY_IFEO_WRITE", "contains": [ "Debugger" ] },
-          { "detection": "REGISTRY_WINLOGON_MODIFY", "contains": [ "Winlogon" ] },
-          { "detection": "REGISTRY_APPINIT_DLL_WRITE", "contains": [ "AppInit_DLLs" ] },
-          { "detection": "REGISTRY_BOOT_EXECUTE_WRITE", "contains": [ "BootExecute" ] },
-          { "detection": "REGISTRY_SERVICE_WRITE", "contains": [ "ImagePath" ] },
+          {
+            "detection": "REGISTRY_IFEO_WRITE",
+            "contains": [
+              "Debugger"
+            ]
+          },
+          {
+            "detection": "REGISTRY_WINLOGON_MODIFY",
+            "contains": [
+              "Winlogon"
+            ]
+          },
+          {
+            "detection": "REGISTRY_APPINIT_DLL_WRITE",
+            "contains": [
+              "AppInit_DLLs"
+            ]
+          },
+          {
+            "detection": "REGISTRY_BOOT_EXECUTE_WRITE",
+            "contains": [
+              "BootExecute"
+            ]
+          },
+          {
+            "detection": "REGISTRY_SERVICE_WRITE",
+            "contains": [
+              "ImagePath"
+            ]
+          },
           "REGISTRY_COM_HIJACK_WRITE",
           "REGISTRY_WMI_PERSISTENCE_WRITE",
           "REGISTRY_SCHEDULED_TASK_WRITE",
@@ -266,7 +536,10 @@
     {
       "id": "registry_recon",
       "kind": "detection",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_registry_recon.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_registry_recon.exe"
+      },
       "expected": {
         "required": [
           "REGISTRY_CREDENTIAL_HIVE_QUERY",
@@ -289,7 +562,10 @@
     {
       "id": "kerberos_recon_extended",
       "kind": "detection",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_kerberos_recon_extended.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_kerberos_recon_extended.exe"
+      },
       "expected": {
         "required": [
           "REGISTRY_KERBEROS_QUERY",
@@ -304,7 +580,10 @@
     {
       "id": "lpe_surface",
       "kind": "detection",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_lpe_surface.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_lpe_surface.exe"
+      },
       "expected": {
         "required": [
           "REGISTRY_SERVICE_WRITE",
@@ -321,7 +600,10 @@
     {
       "id": "edr_av_product_probes",
       "kind": "detection",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_edr_av_product_probes.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_edr_av_product_probes.exe"
+      },
       "launch": {
         "scanSeconds": 16,
         "enableKernelHooks": true
@@ -343,7 +625,10 @@
     {
       "id": "security_product_enterprise_geo_probes",
       "kind": "detection",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_security_product_enterprise_geo_probes.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_security_product_enterprise_geo_probes.exe"
+      },
       "launch": {
         "scanSeconds": 16,
         "enableKernelHooks": true
@@ -367,7 +652,10 @@
     {
       "id": "dll_load_surface",
       "kind": "detection",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_dll_load_surface.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_dll_load_surface.exe"
+      },
       "launch": {
         "sidecars": [
           "x64/Release/bb_unsigned_plugin.dll",
@@ -391,15 +679,24 @@
     {
       "id": "image_load_double_extension",
       "kind": "detection",
-      "source": { "type": "binary", "path": "x64/Release/invoice.pdf.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/invoice.pdf.exe"
+      },
       "expected": {
-        "required": [ "IMAGE_LOAD_DOUBLE_EXTENSION", "FILE_UNSIGNED_EXECUTABLE" ]
+        "required": [
+          "IMAGE_LOAD_DOUBLE_EXTENSION",
+          "FILE_UNSIGNED_EXECUTABLE"
+        ]
       }
     },
     {
       "id": "anti_debug_vm_queries",
       "kind": "detection",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_anti_debug_vm_queries.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_anti_debug_vm_queries.exe"
+      },
       "expected": {
         "required": [
           "ANTI_DEBUG_QUERY",
@@ -415,45 +712,82 @@
     {
       "id": "blackbird_protection_probes",
       "kind": "detection-protection",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_blackbird_protection_probes.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_blackbird_protection_probes.exe"
+      },
       "launch": {
         "scanSeconds": 18,
         "enableKernelHooks": true,
         "enableAntiVirtualizationMasking": true,
         "enableControllerConcealment": true,
         "concealHookPresence": true,
-        "environment": { "BKAES_ASSERT_CONCEALMENT": "1" },
+        "environment": {
+          "BKAES_ASSERT_CONCEALMENT": "1"
+        },
         "enableControllerProtectedAccess": true
       },
       "expected": {
         "required": [
-          { "detection": "USERMODE_PROCESS_RECON", "operation": "NtQuerySystemInformation" },
-          { "detection": "USERMODE_PROCESS_RECON", "operation": "NtQueryVirtualMemory" },
-          { "detection": "USERMODE_PROCESS_RECON", "operation": "NtReadVirtualMemory" },
-          { "detection": "USERMODE_THREAD_HANDLE_ACTIVITY", "operation": "NtOpenThread" },
-          { "detection": "USERMODE_HOOK_API_CALL", "operation": "NtGetNextThread" },
-          { "detection": "SR71_HOOK_PROTECT_BLOCKED", "operation": "NtProtectVirtualMemory" }
+          {
+            "detection": "USERMODE_PROCESS_RECON",
+            "operation": "NtQuerySystemInformation"
+          },
+          {
+            "detection": "USERMODE_PROCESS_RECON",
+            "operation": "NtQueryVirtualMemory"
+          },
+          {
+            "detection": "USERMODE_PROCESS_RECON",
+            "operation": "NtReadVirtualMemory"
+          },
+          {
+            "detection": "USERMODE_THREAD_HANDLE_ACTIVITY",
+            "operation": "NtOpenThread"
+          },
+          {
+            "detection": "USERMODE_HOOK_API_CALL",
+            "operation": "NtGetNextThread"
+          },
+          {
+            "detection": "SR71_HOOK_PROTECT_BLOCKED",
+            "operation": "NtProtectVirtualMemory"
+          }
         ],
         "optional": [
-          { "detection": "SR71_HOOK_WRITE_BLOCKED", "operation": "NtWriteVirtualMemory" },
+          {
+            "detection": "SR71_HOOK_WRITE_BLOCKED",
+            "operation": "NtWriteVirtualMemory"
+          },
           "ANTI_VM_FILESYSTEM_ARTIFACT_PROBE",
           "ANTI_VM_REGISTRY_ARTIFACT_PROBE",
-          { "detection": "USERMODE_PROCESS_HANDLE_ACTIVITY", "operation": "NtOpenProcess" }
+          {
+            "detection": "USERMODE_PROCESS_HANDLE_ACTIVITY",
+            "operation": "NtOpenProcess"
+          }
         ]
       }
     },
     {
       "id": "dynamic_function_table",
       "kind": "detection",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_dynamic_function_table.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_dynamic_function_table.exe"
+      },
       "expected": {
-        "required": [ "DYNAMIC_FUNCTION_TABLE_ABUSE" ]
+        "required": [
+          "DYNAMIC_FUNCTION_TABLE_ABUSE"
+        ]
       }
     },
     {
       "id": "memory_flips_entropy",
       "kind": "detection",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_memory_flips_entropy.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_memory_flips_entropy.exe"
+      },
       "expected": {
         "required": [
           "MEMORY_GUARD_NOACCESS_PROTECTION_FLIP",
@@ -467,7 +801,10 @@
     {
       "id": "guard_ordered_jit",
       "kind": "detection",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_guard_ordered_jit.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_guard_ordered_jit.exe"
+      },
       "expected": {
         "required": [
           "MEMORY_GUARD_NOACCESS_PROTECTION_FLIP",
@@ -482,7 +819,10 @@
     {
       "id": "xor_entropy_cycle",
       "kind": "detection",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_xor_entropy_cycle.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_xor_entropy_cycle.exe"
+      },
       "expected": {
         "required": [
           "MEMORY_HIGH_ENTROPY_WRITE_PATTERN",
@@ -497,7 +837,10 @@
     {
       "id": "network_patterns",
       "kind": "detection",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_network_patterns.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_network_patterns.exe"
+      },
       "expected": {
         "required": [
           "DNS_TUNNELING_SUSPECT",
@@ -512,7 +855,10 @@
     {
       "id": "beacon_loopback_pattern",
       "kind": "detection",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_beacon_loopback_pattern.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_beacon_loopback_pattern.exe"
+      },
       "expected": {
         "required": [
           "PERIODIC_BEACON_PATTERN",
@@ -528,7 +874,10 @@
     {
       "id": "com_wmi_etw_job",
       "kind": "detection",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_com_wmi_etw_job.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_com_wmi_etw_job.exe"
+      },
       "expected": {
         "required": [
           "USERMODE_COM_INIT",
@@ -546,8 +895,15 @@
     {
       "id": "sensitive_credential_handles",
       "kind": "detection-sensitive",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_sensitive_credential_handles.exe" },
-      "launch": { "args": [ "--enable-sensitive" ] },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_sensitive_credential_handles.exe"
+      },
+      "launch": {
+        "args": [
+          "--enable-sensitive"
+        ]
+      },
       "expected": {
         "required": [
           "CREDENTIAL_ACCESS_LSASS_HANDLE",
@@ -561,113 +917,204 @@
     {
       "id": "target_nonzero_exit",
       "kind": "detection",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_target_nonzero_exit.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_target_nonzero_exit.exe"
+      },
       "expected": {
-        "required": [ "TARGET_PROCESS_NONZERO_EXIT" ]
+        "required": [
+          "TARGET_PROCESS_NONZERO_EXIT"
+        ]
       }
     },
     {
       "id": "target_exception",
       "kind": "detection",
-      "source": { "type": "binary", "path": "x64/Release/bb_det_target_exception.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_target_exception.exe"
+      },
       "expected": {
-        "required": [ "TARGET_PROCESS_EXCEPTION" ]
+        "required": [
+          "TARGET_PROCESS_EXCEPTION"
+        ]
       }
     },
     {
       "id": "fuzz_ntapi_queries",
       "kind": "fuzzer",
-      "source": { "type": "binary", "path": "x64/Release/bb_fuzz_ntapi_queries.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_fuzz_ntapi_queries.exe"
+      },
       "expected": {
-        "required": [ "ANTI_DEBUG_QUERY", "SANDBOX_EVASION_QUERY" ]
+        "required": [
+          "ANTI_DEBUG_QUERY",
+          "SANDBOX_EVASION_QUERY"
+        ]
       }
     },
     {
       "id": "fuzz_registry_paths",
       "kind": "fuzzer",
-      "source": { "type": "binary", "path": "x64/Release/bb_fuzz_registry_paths.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_fuzz_registry_paths.exe"
+      },
       "expected": {
-        "required": [ "HIGH_VALUE_REGISTRY_ACTIVITY" ]
+        "required": [
+          "HIGH_VALUE_REGISTRY_ACTIVITY"
+        ]
       }
     },
     {
       "id": "fuzz_module_loads",
       "kind": "fuzzer",
-      "source": { "type": "binary", "path": "x64/Release/bb_fuzz_module_loads.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_fuzz_module_loads.exe"
+      },
       "expected": {
-        "required": [ "USERMODE_MODULE_LOAD", "SCRIPT_ENGINE_LOAD" ]
+        "required": [
+          "USERMODE_MODULE_LOAD",
+          "SCRIPT_ENGINE_LOAD"
+        ]
       }
     },
     {
       "id": "ok_file_registry",
       "kind": "benign",
-      "source": { "type": "binary", "path": "x64/Release/bb_ok_file_registry.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_ok_file_registry.exe"
+      },
       "expected": {
         "required": [],
-        "forbidden": [ { "detection": "*", "minSeverity": "Medium" } ]
+        "forbidden": [
+          {
+            "detection": "*",
+            "minSeverity": "Medium"
+          }
+        ]
       }
     },
     {
       "id": "ok_memory_process",
       "kind": "benign",
-      "source": { "type": "binary", "path": "x64/Release/bb_ok_memory_process.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_ok_memory_process.exe"
+      },
       "expected": {
         "required": [],
-        "forbidden": [ { "detection": "*", "minSeverity": "Medium" } ]
+        "forbidden": [
+          {
+            "detection": "*",
+            "minSeverity": "Medium"
+          }
+        ]
       }
     },
     {
       "id": "ok_network_loopback",
       "kind": "benign",
-      "source": { "type": "binary", "path": "x64/Release/bb_ok_network_loopback.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_ok_network_loopback.exe"
+      },
       "expected": {
         "required": [],
-        "forbidden": [ { "detection": "*", "minSeverity": "Medium" } ]
+        "forbidden": [
+          {
+            "detection": "*",
+            "minSeverity": "Medium"
+          }
+        ]
       }
     },
     {
       "id": "ok_document_workflow",
       "kind": "benign",
-      "source": { "type": "binary", "path": "x64/Release/bb_ok_document_workflow.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_ok_document_workflow.exe"
+      },
       "expected": {
         "required": [],
-        "forbidden": [ { "detection": "*", "minSeverity": "Medium" } ]
+        "forbidden": [
+          {
+            "detection": "*",
+            "minSeverity": "Medium"
+          }
+        ]
       }
     },
     {
       "id": "ok_system_inventory",
       "kind": "benign",
-      "source": { "type": "binary", "path": "x64/Release/bb_ok_system_inventory.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_ok_system_inventory.exe"
+      },
       "expected": {
         "required": [],
-        "forbidden": [ { "detection": "*", "minSeverity": "Medium" } ]
+        "forbidden": [
+          {
+            "detection": "*",
+            "minSeverity": "Medium"
+          }
+        ]
       }
     },
     {
       "id": "ok_com_logging_job",
       "kind": "benign",
-      "source": { "type": "binary", "path": "x64/Release/bb_ok_com_logging_job.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_ok_com_logging_job.exe"
+      },
       "expected": {
         "required": [],
-        "forbidden": [ { "detection": "*", "minSeverity": "Medium" } ]
+        "forbidden": [
+          {
+            "detection": "*",
+            "minSeverity": "Medium"
+          }
+        ]
       }
     },
     {
       "id": "ok_system_dll_loads",
       "kind": "benign",
-      "source": { "type": "binary", "path": "x64/Release/bb_ok_system_dll_loads.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_ok_system_dll_loads.exe"
+      },
       "expected": {
         "required": [],
-        "forbidden": [ { "detection": "*", "minSeverity": "Medium" } ]
+        "forbidden": [
+          {
+            "detection": "*",
+            "minSeverity": "Medium"
+          }
+        ]
       }
     },
     {
       "id": "ok_localhost_service",
       "kind": "benign",
-      "source": { "type": "binary", "path": "x64/Release/bb_ok_localhost_service.exe" },
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_ok_localhost_service.exe"
+      },
       "expected": {
         "required": [],
-        "forbidden": [ { "detection": "*", "minSeverity": "Medium" } ]
+        "forbidden": [
+          {
+            "detection": "*",
+            "minSeverity": "Medium"
+          }
+        ]
       }
     }
   ]
