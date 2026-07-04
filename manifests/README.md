@@ -28,4 +28,8 @@ Protection benchmarks are resolved the same way as detection cases, but may poin
 tools instead of AES sample binaries when the test validates analysis-environment concealment rather than
 sample behavior.
 
+Use `Scripts\Install-BlackbirdProtectionBenchmarks.ps1` to validate the protection manifest or sync it into
+an installed AES root. The helper also writes `benchmarks\manifest.json` as a legacy compatibility shim for
+older runner/server paths; `manifests\blackbird.protection.json` remains the source of truth.
+
 The runner writes `blackbird-detection-audit.json`, `blackbird-detection-audit.md`, `junit.xml`, and one per-case folder containing the capture archive plus `result.json` and `facts.json`.
