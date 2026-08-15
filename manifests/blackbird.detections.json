@@ -982,6 +982,103 @@
       }
     },
     {
+      "id": "vol_policy_effects",
+      "kind": "detection-protection",
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_vol_policy_effects.exe"
+      },
+      "launch": {
+        "scanSeconds": 18,
+        "enableKernelHooks": true,
+        "useKernelDriver": true,
+        "useUsermodeHooks": true,
+        "volEnabled": true,
+        "volSnapshotAcknowledged": true,
+        "volProfileId": "aes-vol-policy-effects-v1",
+        "volExpectedPolicyCount": 1,
+        "volExpectedMinimumHitCount": 5,
+        "environment": {
+          "BKAES_EXPECT_VOL": "1"
+        },
+        "volPolicyBundle": {
+          "schema": "BK.vol.policy.bundle.v1",
+          "policies": [
+            {
+              "policyId": "aes-vol-effects-v1",
+              "generation": 1,
+              "ttlSeconds": 48,
+              "reason": "AES VOL runtime effect validation",
+              "rules": [
+                {
+                  "action": "registryQueryNotFound",
+                  "registryPath": "\\Software\\BlackbirdAES\\VOL",
+                  "valueName": "Hidden",
+                  "flagNames": [
+                    "pathContains"
+                  ],
+                  "tag": "aes-reg-hide"
+                },
+                {
+                  "action": "registryValueReplace",
+                  "registryPath": "\\Software\\BlackbirdAES\\VOL",
+                  "valueName": "Replaced",
+                  "flagNames": [
+                    "pathContains"
+                  ],
+                  "dataType": 4,
+                  "dataHex": "78563412",
+                  "tag": "aes-reg-replace"
+                },
+                {
+                  "action": "memoryReadOverlay",
+                  "baseAddress": 3003697332224,
+                  "regionSize": 16,
+                  "dataUtf8": "VOL-READ-OVERLAY",
+                  "tag": "aes-read-overlay"
+                },
+                {
+                  "action": "memoryWriteCloak",
+                  "baseAddress": 3003697336320,
+                  "regionSize": 16,
+                  "tag": "aes-write-cloak"
+                },
+                {
+                  "action": "memoryProtectDeny",
+                  "baseAddress": 3003697340416,
+                  "regionSize": 4096,
+                  "tag": "aes-protect-deny"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "required": []
+      }
+    },
+    {
+      "id": "vol_policy_baseline",
+      "kind": "protection-baseline",
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_vol_policy_effects.exe"
+      },
+      "launch": {
+        "scanSeconds": 12,
+        "enableKernelHooks": true,
+        "useKernelDriver": true,
+        "useUsermodeHooks": true,
+        "environment": {
+          "BKAES_EXPECT_VOL": "0"
+        }
+      },
+      "expected": {
+        "required": []
+      }
+    },
+    {
       "id": "ok_file_registry",
       "kind": "benign",
       "source": {

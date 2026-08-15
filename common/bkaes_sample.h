@@ -97,6 +97,7 @@ int RunImageLoadDoubleExtension();
 int RunAntiDebugVmQueries();
 int RunBlackbirdProtectionProbes();
 int RunDynamicFunctionTable();
+int RunVolPolicyEffects();
 int RunMemoryFlipsEntropy();
 int RunGuardOrderedJit();
 int RunXorEntropyCycle();
