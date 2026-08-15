@@ -66,6 +66,8 @@ int wmain(int argc, wchar_t **argv) {
   return RunBlackbirdProtectionProbes();
 #elif defined(BKAES_SAMPLE_DYNAMIC_FUNCTION_TABLE)
   return RunDynamicFunctionTable();
+#elif defined(BKAES_SAMPLE_VOL_POLICY_EFFECTS)
+  return RunVolPolicyEffects();
 #elif defined(BKAES_SAMPLE_MEMORY_FLIPS_ENTROPY)
   return RunMemoryFlipsEntropy();
 #elif defined(BKAES_SAMPLE_GUARD_ORDERED_JIT)

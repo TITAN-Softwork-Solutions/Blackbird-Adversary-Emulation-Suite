@@ -261,7 +261,7 @@ function Get-SampleKind {
     if ($name -eq "bb_det_sensitive_credential_handles") {
         return "detection-sensitive"
     }
-    if ($name -eq "bb_det_blackbird_protection_probes") {
+    if ($name -eq "bb_det_blackbird_protection_probes" -or $name -eq "bb_det_vol_policy_effects") {
         return "detection-protection"
     }
     return "detection"
@@ -429,6 +429,7 @@ $sampleBuilds = @(
     @{ Category = "sxs"; Name = "bb_fuzz_module_loads"; Define = "BKAES_SAMPLE_FUZZ_MODULE_LOADS" },
     @{ Category = "sxs"; Name = "bb_ok_system_dll_loads"; Define = "BKAES_SAMPLE_OK_SYSTEM_DLL_LOADS" },
     @{ Category = "mem"; Name = "bb_det_dynamic_function_table"; Define = "BKAES_SAMPLE_DYNAMIC_FUNCTION_TABLE" },
+    @{ Category = "mem"; Name = "bb_det_vol_policy_effects"; Define = "BKAES_SAMPLE_VOL_POLICY_EFFECTS" },
     @{ Category = "mem"; Name = "bb_det_memory_flips_entropy"; Define = "BKAES_SAMPLE_MEMORY_FLIPS_ENTROPY" },
     @{ Category = "mem"; Name = "bb_det_guard_ordered_jit"; Define = "BKAES_SAMPLE_GUARD_ORDERED_JIT" },
     @{ Category = "mem"; Name = "bb_det_xor_entropy_cycle"; Define = "BKAES_SAMPLE_XOR_ENTROPY_CYCLE" },
