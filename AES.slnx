@@ -10,6 +10,7 @@
   <Project Path="VCXProj\AES.Samples.Hollowing.vcxproj" Id="dcf60eeb-ceac-441e-a759-164f96f54b17" />
   <Project Path="VCXProj\AES.Samples.Injection.vcxproj" Id="aac92c28-fb51-4070-8e03-c2e89b385b29" />
   <Project Path="VCXProj\AES.Samples.Kerberos.vcxproj" Id="2d8bf3a2-d3a7-4888-861a-cfa4e0d96d1b" />
+  <Project Path="VCXProj\AES.Samples.Loader.vcxproj" Id="2476d90d-77cd-4211-af92-3eff28fc1614" />
   <Project Path="VCXProj\AES.Samples.Lotl.vcxproj" Id="62266ecc-1469-4a7b-9d3f-9b8bbf778a01" />
   <Project Path="VCXProj\AES.Samples.Lpe.vcxproj" Id="95b802cf-907e-4561-8973-9f0c15c6228b" />
   <Project Path="VCXProj\AES.Samples.Memory.vcxproj" Id="270b5ed8-7756-4bdd-b488-eb03a42dc458" />

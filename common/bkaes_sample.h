@@ -85,6 +85,8 @@ int RunLoadLibraryModuleNotify();
 int RunEarlyBirdApc();
 int RunTransactedHollowingMarker();
 int RunSetWindowsHookEx();
+int RunPostProcessInitPrepatched(int argc, wchar_t **argv);
+int RunPostProcessInitRemotePatch(int argc, wchar_t **argv);
 int RunPpidSpoof();
 int RunPowerShellCmdlines();
 int RunLolbinCmdlines();

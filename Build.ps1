@@ -1,6 +1,6 @@
 param(
     [string]$OutDir = "",
-    [ValidateSet("all", "apc", "beacon", "benign", "hollowing", "injection", "kerberos", "lotl", "lpe", "mem", "network", "process", "registry", "service", "sxs", "syscall")]
+    [ValidateSet("all", "apc", "beacon", "benign", "hollowing", "injection", "kerberos", "loader", "lotl", "lpe", "mem", "network", "process", "registry", "service", "sxs", "syscall")]
     [string[]]$Category = @("all"),
     [string]$Configuration = "Release",
     [ValidateSet("x64", "x86", "Win32")]
@@ -165,7 +165,7 @@ function Resolve-ControlFlowGuard {
         return $false
     }
 
-    return $CategoryName -notin @("apc", "hollowing", "injection", "mem", "syscall")
+    return $CategoryName -notin @("apc", "hollowing", "injection", "loader", "mem", "syscall")
 }
 
 function Build-Exe {
@@ -173,7 +173,8 @@ function Build-Exe {
         [string]$Name,
         [string]$Define,
         [string]$CategoryName,
-        [string]$OutputName = $null
+        [string]$OutputName = $null,
+        [bool]$EmbedPostProcessInitRoutine = $false
     )
 
     if ([string]::IsNullOrWhiteSpace($OutputName)) {
@@ -195,6 +196,14 @@ function Build-Exe {
     & link.exe @linkArgs
     if ($LASTEXITCODE -ne 0) {
         throw "link.exe failed for $Name"
+    }
+
+    if ($EmbedPostProcessInitRoutine) {
+        $patcher = Join-Path $repoRoot "Scripts\Add-PostProcessInitRoutineSection.ps1"
+        & $patcher -Path $outPath
+        if ($LASTEXITCODE -ne 0) {
+            throw "PostProcessInitRoutine post-link patch failed for $Name"
+        }
     }
 }
 
@@ -376,13 +385,16 @@ $commonDir = Join-Path $repoRoot "common"
 $driver = Join-Path $commonDir "bkaes_sample_dispatch.cpp"
 $plugin = Join-Path $repoRoot "sxs\bkaes_unsigned_plugin.cpp"
 
-$allCategories = @("apc", "beacon", "benign", "hollowing", "injection", "kerberos", "lotl", "lpe", "mem", "network", "process", "registry", "service", "sxs", "syscall")
+$allCategories = @("apc", "beacon", "benign", "hollowing", "injection", "kerberos", "loader", "lotl", "lpe", "mem", "network", "process", "registry", "service", "sxs", "syscall")
 $requestedCategories = @($Category | ForEach-Object { $_.ToLowerInvariant() })
 $selectedCategories = if ($requestedCategories -contains "all") {
     $allCategories
 }
 else {
     @($requestedCategories | Sort-Object -Unique)
+}
+if ($platformOut -ne "x64" -and $selectedCategories -contains "loader") {
+    throw "The loader fixtures require Platform x64."
 }
 
 $selectedCategorySet = New-Object System.Collections.Generic.HashSet[string]([System.StringComparer]::OrdinalIgnoreCase)
@@ -410,6 +422,8 @@ $sampleBuilds = @(
     @{ Category = "injection"; Name = "bb_det_setwindows_hookex"; Define = "BKAES_SAMPLE_SETWINDOWS_HOOKEX" },
     @{ Category = "hollowing"; Name = "bb_det_hollowing_mark_chain"; Define = "BKAES_SAMPLE_HOLLOWING_MARK_CHAIN" },
     @{ Category = "hollowing"; Name = "bb_det_transacted_hollowing_marker"; Define = "BKAES_SAMPLE_TRANSACTED_HOLLOWING_MARKER" },
+    @{ Category = "loader"; Name = "bb_det_post_process_init_prepatched"; Define = "BKAES_SAMPLE_POST_PROCESS_INIT_PREPATCHED"; EmbedPostProcessInitRoutine = $true },
+    @{ Category = "loader"; Name = "bb_det_post_process_init_remote_patch"; Define = "BKAES_SAMPLE_POST_PROCESS_INIT_REMOTE_PATCH" },
     @{ Category = "apc"; Name = "bb_det_remote_apc_queue"; Define = "BKAES_SAMPLE_REMOTE_APC_QUEUE" },
     @{ Category = "apc"; Name = "bb_det_early_bird_apc"; Define = "BKAES_SAMPLE_EARLY_BIRD_APC" },
     @{ Category = "process"; Name = "bb_det_ppid_spoof"; Define = "BKAES_SAMPLE_PPID_SPOOF" },
@@ -530,7 +544,8 @@ if ($needsPlugin) {
 
 foreach ($build in $selectedBuilds) {
     $outputName = if ($build.ContainsKey("OutputName")) { $build["OutputName"] } else { $null }
-    Build-Exe -Name $build["Name"] -Define $build["Define"] -CategoryName $build["Category"] -OutputName $outputName
+    $embedPpir = $build.ContainsKey("EmbedPostProcessInitRoutine") -and $build["EmbedPostProcessInitRoutine"]
+    Build-Exe -Name $build["Name"] -Define $build["Define"] -CategoryName $build["Category"] -OutputName $outputName -EmbedPostProcessInitRoutine $embedPpir
 }
 
 Remove-Item -LiteralPath $objDir -Recurse -Force

@@ -1079,6 +1079,101 @@
       }
     },
     {
+      "id": "post_process_init_prepatched",
+      "kind": "detection",
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_post_process_init_prepatched.exe"
+      },
+      "launch": {
+        "scanSeconds": 10,
+        "enableKernelHooks": true,
+        "useKernelDriver": true,
+        "useUsermodeHooks": false
+      },
+      "expected": {
+        "required": [
+          {
+            "detection": "POST_PROCESS_INIT_ROUTINE_HIJACK",
+            "operation": "NtResumeThread"
+          }
+        ]
+      }
+    },
+    {
+      "id": "post_process_init_remote_patch",
+      "kind": "detection",
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_post_process_init_remote_patch.exe"
+      },
+      "launch": {
+        "scanSeconds": 10,
+        "enableKernelHooks": true,
+        "useKernelDriver": true,
+        "useUsermodeHooks": false
+      },
+      "expected": {
+        "required": [
+          {
+            "detection": "POST_PROCESS_INIT_ROUTINE_HIJACK",
+            "operation": "NtResumeThread"
+          }
+        ],
+        "optional": [
+          "INJECTION_CHAIN_PARTIAL",
+          "MEMORY_PROTECTION_FLIP_PATTERN",
+          "MEMORY_WRITABLE_EXECUTABLE_PROTECTION_FLIP"
+        ]
+      }
+    },
+    {
+      "id": "post_process_init_prepatched_no_peb_write",
+      "kind": "negative-control",
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_post_process_init_prepatched.exe"
+      },
+      "launch": {
+        "args": [
+          "--ppir-prepatched-child"
+        ],
+        "scanSeconds": 10,
+        "enableKernelHooks": true,
+        "useKernelDriver": true,
+        "useUsermodeHooks": false
+      },
+      "expected": {
+        "required": [],
+        "forbidden": [
+          "POST_PROCESS_INIT_ROUTINE_HIJACK"
+        ]
+      }
+    },
+    {
+      "id": "post_process_init_remote_patch_no_remote_patch_or_peb_write",
+      "kind": "negative-control",
+      "source": {
+        "type": "binary",
+        "path": "x64/Release/bb_det_post_process_init_remote_patch.exe"
+      },
+      "launch": {
+        "args": [
+          "--ppir-remote-patch-child"
+        ],
+        "scanSeconds": 10,
+        "enableKernelHooks": true,
+        "useKernelDriver": true,
+        "useUsermodeHooks": false
+      },
+      "expected": {
+        "required": [],
+        "forbidden": [
+          "POST_PROCESS_INIT_ROUTINE_HIJACK"
+        ]
+      }
+    },
+    {
       "id": "ok_file_registry",
       "kind": "benign",
       "source": {

@@ -42,6 +42,10 @@ int wmain(int argc, wchar_t **argv) {
   return RunEarlyBirdApc();
 #elif defined(BKAES_SAMPLE_TRANSACTED_HOLLOWING_MARKER)
   return RunTransactedHollowingMarker();
+#elif defined(BKAES_SAMPLE_POST_PROCESS_INIT_PREPATCHED)
+  return RunPostProcessInitPrepatched(argc, argv);
+#elif defined(BKAES_SAMPLE_POST_PROCESS_INIT_REMOTE_PATCH)
+  return RunPostProcessInitRemotePatch(argc, argv);
 #elif defined(BKAES_SAMPLE_PPID_SPOOF)
   return RunPpidSpoof();
 #elif defined(BKAES_SAMPLE_POWERSHELL_CMDLINES)
